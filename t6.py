@@ -24,7 +24,7 @@ from triplet_metrics import triplet_accuracy, mean_norm
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 emb_size = 256
-batch_size = 5
+batch_size = 4
 x_mean = np.full((batch_size, 456, 456, 3), (50.46, 52.25, 43.12), np.float32)
 
 
@@ -62,7 +62,7 @@ model = EfficientNetB5(weights='imagenet', classes=1000)
 model.layers.pop()
 model.layers.pop()
 x = model.layers[-1].output
-out = Dense(emb_size, activation='softmax')
+out = Dense(emb_size, activation='linear')(x)
 model = Model(inputs=model.input, output=out)
 # plot_model(model, to_file='model.png',show_shapes=True)
 
