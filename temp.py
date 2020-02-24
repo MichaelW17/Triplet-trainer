@@ -1,15 +1,37 @@
-import random
-import numpy as np
+from math import log
+
+print(-log(1/12))
 
 
-# print(random.sample([random.randint(0, 10) for _ in range(10)], 3))
-classes = [random.randint(0, 20) for _ in range(5)]
-r = np.random.permutation(len(classes))
-print(classes)
-print(r)
-classes = np.array(classes)
-print(classes[r])
 
+
+
+#-------------------------------------------------------------------------------------
+# opencv图像旋转：warpAffine
+# from matplotlib import pyplot as plt
+# import cv2
+# import numpy as np
+#
+# img = cv2.imread('D:/Dataset/new_scale/Train/02/02_10.jpg')
+# rows, cols = img.shape[:2]
+#
+#
+# # 第一个参数旋转中心，第二个参数旋转角度，第三个参数：缩放比例, 生成一２＊３的矩阵
+# M = cv2.getRotationMatrix2D((cols/2,rows/2), 45, 1)
+#
+# print(M)
+# '''
+# [[ 6.123234e-17  1.000000e+00  1.500000e+02]
+#  [-1.000000e+00  6.123234e-17  6.500000e+02]]
+# '''
+# # 第三个参数：变换后的图像大小
+# img = cv2.warpAffine(img,M,(cols,rows))
+# img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+#
+# plt.figure(figsize=(8,8))
+# plt.imshow(img)
+#
+# plt.show()
 #-----------------------------------------------------------------------------------------
 # 通过简单的数据检查tsne的使用方法是否存在问题
 # import numpy as np

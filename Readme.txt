@@ -1,5 +1,10 @@
 # 用于电子秤快速上新的三重损失模型训练与测试
 
+# compute_mean.py用于计算数据集上的RGB均值，在决定不做crop直接resize后训练（即保留黑边）后，计算的是多个旋转角度的均值。
+# data_division用于将收集的数据划分为Train、Val、Test三部分。
+# multi_trainer实现了keras的多GPU训练（GPU数量必须大于等于2，所以笔记本上无法运行）
+# predictor_new使用训练好的三重损失模型，建立已训练类别的特征空间baseline，保存为baseline.csv，测试脚本为GUI-triplet里的stand_by.py
+
 11/19/2019：目前处于可行性验证阶段，已经实现了
 	1）EfficientNet三重损失的训练（t6.py）；
 	2）训练后的模型用于推理并画出测试集的TSNE图（predictor.py）

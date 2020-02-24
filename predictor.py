@@ -29,13 +29,12 @@ import cv2
 from sklearn.manifold import TSNE
 from TSNE_plot import scatter
 
-
 emb_dim = 256
 avg_num = 5
 x_mean = np.full((avg_num, 456, 456, 3), (50.46, 52.25, 43.12), dtype=np.float32)
 # print(x_mean.dtype)
 
-model = load_model('C:/Users/Minghao/Desktop/dipper/weights-45classes-triplet-47.h5',
+model = load_model('C:/Users/Minghao/Desktop/dipper/triplet1210-test-31.h5',
                    custom_objects={'batch_all_triplet_loss': batch_all_triplet_loss,
                                    'triplet_accuracy': triplet_accuracy, 'mean_norm': mean_norm})
 
@@ -59,7 +58,7 @@ def create_high_dim_embs(dataset_path, classes, x_mean, avg_num):
         predictions = model.predict_on_batch(imgs - x_mean)
         print(predictions.shape)
         # emb_pool += prediction[0]
-
+        i = i - 30
         embs[i*avg_num:(i+1)*avg_num] = predictions
         # embs[i] = emb_pool / avg_num
 
@@ -69,7 +68,7 @@ def create_high_dim_embs(dataset_path, classes, x_mean, avg_num):
             # plt.axis('off')
             # plt.show()
 
-classes = np.arange(0, 45)
+classes = np.arange(30, 50)
 embs = create_high_dim_embs(dataset_path, classes, x_mean, avg_num=avg_num)
 print(embs)
 print(np.max(embs, axis=1))
@@ -79,5 +78,6 @@ from TSNE_plot import tsne_plot
 # tsne = TSNE(init='pca', random_state=0)
 tsne = TSNE()
 tsne_embeds = tsne.fit_transform(embs)
-scatter(tsne_embeds, np.repeat(classes, avg_num))
+classes = np.arange(0, 20)
+scatter(tsne_embeds, np.repeat(classes, avg_num), len(classes), show_id=True)
 

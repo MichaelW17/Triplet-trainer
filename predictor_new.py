@@ -18,16 +18,16 @@ import json, csv
 
 
 emb_dim = 256
-avg_num = 50
-x_mean = np.full((avg_num, 456, 456, 3), (50.46, 52.25, 43.12), dtype=np.float32)
-baseline_space = defaultdict(list)
+avg_num = 20
+x_mean = np.full((avg_num, 456, 456, 3), (67.35, 65.08, 56.17), dtype=np.float32)
+# baseline_space = defaultdict(list)
 baseline = []
 
-model = load_model('C:/Users/Minghao/Desktop/dipper/weights-45classes-triplet-47.h5',
+model = load_model('C:/Users/Minghao/Desktop/dipper/new20classes-triplet-aug-margin50-10.h5',
                    custom_objects={'batch_all_triplet_loss': batch_all_triplet_loss,
                                    'triplet_accuracy': triplet_accuracy, 'mean_norm': mean_norm})
 
-dataset_path = 'D:/Dataset/lilscale50/Train/'  # 最后的‘/’不能少
+dataset_path = 'D:/Dataset/new_scale/Train/'  # 最后的‘/’不能少
 # print(os.listdir(dataset_path).sort)
 
 
@@ -40,8 +40,8 @@ def create_high_dim_embs(dataset_path, classes, x_mean, avg_num):
         for j in range(avg_num):  # 取随机5张图片的平均嵌入值
             img_path = img_dir + '/' + random.sample(os.listdir(img_dir), 1)[0]
             img = cv2.imread(img_path)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)[140:-140, 140:-140, :]
-            img = cv2.resize(img, (456, 456), interpolation=cv2.INTER_CUBIC)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  #[140:-140, 140:-140, :]
+            img = cv2.resize(img, (456, 456), interpolation=cv2.INTER_AREA)
             imgs[j] = img
         predictions = model.predict_on_batch(imgs - x_mean)  # 批量推理
         class_emb = np.mean(predictions, axis=0)  # 取一类图片特征嵌入的均值作为该类的嵌入向量
@@ -49,9 +49,9 @@ def create_high_dim_embs(dataset_path, classes, x_mean, avg_num):
         baseline.append(class_emb)
 
 
-classes = np.arange(0, 45)
+classes = np.arange(0, 27)
 create_high_dim_embs(dataset_path, classes, x_mean, avg_num=avg_num)
-print(len(baseline_space))
+# print(len(baseline_space))
 print(len(baseline))
 # 保存为json文件
 # with open('baseline.json', 'w', encoding='utf-8') as fp:
@@ -62,7 +62,7 @@ print(len(baseline))
 
 
 # 保存为csv文件
-with open('baseline.csv', 'w', newline='') as csvfile:
+with open('baseline27-margin50.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
     counter = 0
     for row in baseline:

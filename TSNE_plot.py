@@ -12,30 +12,37 @@ import tensorflow as tf
 from tensorflow.contrib.tensorboard.plugins import projector
 
 
-def scatter(x, labels):
-    # We choose a color palette with seaborn.
-    palette = np.array(sns.color_palette("hls", 50))
+def scatter(x, labels, class_num, show_id=True):
+    '''
 
-    # We create a scatter plot.
+    :param x:  每一行为一个嵌入向量在tsne之后得到的二维表示
+    :param labels: 嵌入向量对应的label
+    :param len:  类别数
+    :return: none
+    '''
+    # choose a color palette with seaborn.
+    palette = np.array(sns.color_palette("hls", class_num))
+
+    # create a scatter plot.
     f = plt.figure(figsize=(8, 8))
     ax = plt.subplot(aspect='equal')
-    sc = ax.scatter(x[:, 0], x[:, 1], lw=0, s=40,
-                    c=palette[labels.astype(np.int)])
+    sc = ax.scatter(x[:, 0], x[:, 1], lw=0, s=40, c=palette[labels.astype(np.int)])
     plt.xlim(-25, 25)
     plt.ylim(-25, 25)
     ax.axis('off')
     ax.axis('tight')
 
-    # We add the labels for each digit.
-    # txts = []
-    # for i in range(10):
-    #     # Position of each label.
-    #     xtext, ytext = np.median(x[labels == i, :], axis=0)
-    #     txt = ax.text(xtext, ytext, str(i), fontsize=24)
-    #     txt.set_path_effects([
-    #         PathEffects.Stroke(linewidth=5, foreground="w"),
-    #         PathEffects.Normal()])
-    #     txts.append(txt)
+    if show_id:
+    # add a label for each cluster
+        txts = []
+        for i in range(class_num):
+            # Position of each label.
+            xtext, ytext = np.median(x[labels == i, :], axis=0)
+            txt = ax.text(xtext, ytext, str(i), fontsize=24)
+            txt.set_path_effects([
+                PathEffects.Stroke(linewidth=5, foreground="w"),
+                PathEffects.Normal()])
+            txts.append(txt)
 
     plt.show()
 

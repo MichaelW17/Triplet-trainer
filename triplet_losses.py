@@ -2,7 +2,7 @@
 
 import tensorflow as tf
 
-margin_config = 0.5
+margin_config = 10
 
 
 def _pairwise_distances(embeddings, squared=False):
@@ -160,6 +160,8 @@ def batch_all_triplet_loss(labels, embeddings, margin=margin_config, squared=Fal
     triplet_loss = tf.reduce_sum(triplet_loss) / (num_positive_triplets + 1e-16)
 
     return triplet_loss
+
+
 
 
 def batch_hard_triplet_loss(labels, embeddings, margin=margin_config, squared=False):

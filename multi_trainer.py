@@ -45,8 +45,9 @@ def datagen(dataset_path, N, K, x_mean):  # 函数式generator
     while 1:
 
         # 先从数据集中选出N类SKU
-        classes = random.sample(range(class_num), N)
-        labels = np.repeat(np.array(classes), K)  # 生成对应的标签
+        classes = random.sample(range(class_num), N)  # 有重复
+        classes = np.random.choice(45, N, replace=False)
+        labels = np.repeat(classes, K)  # 生成对应的标签
         classes = ['0'+str(ii) if ii < 10 else str(ii) for ii in classes]  # 转换为字符
         imgs = np.zeros((N * K, 957, 957, 3), dtype=np.uint8)  # 训练图片
         img_idx = 0
@@ -118,9 +119,9 @@ with tf.device("/cpu:0"):
     model.layers.pop()
     x = model.layers[-1].output
     out = Dense(emb_size, activation='linear')(x)
-    model = Model(inputs=model.input, output=out)
+    model = Model(inputs=model.input, outputs=out)
     # plot_model(model, to_file='model.png',show_shapes=True)
-    for i in range(0, len(model.layers) - 2):
+    for i in range(0, len(model.layers) - 1):
         model.layers[i].trainable = False
 
 # print('layer count: ', len(model.layers))
@@ -131,7 +132,7 @@ model = multi_gpu_model(model, gpus=gpu_num)
 # sgd = optimizers.SGD(lr=0.0001, decay=0, momentum=0.9)
 model.compile(loss=batch_all_triplet_loss, optimizer='adam', metrics=[triplet_accuracy, mean_norm])
 
-filepath = "weights-50classes-alien-{epoch:02d}.h5"
+filepath = "weights-50classes-alien-{epoch:02d}_test.h5"
 
 callbacks_list = []
 # 中途训练效果提升, 则将文件保存, 每提升一次, 保存一次
@@ -151,8 +152,8 @@ tensorboard_callback = TensorBoard(
         )
 callbacks_list.append(tensorboard_callback)
 
-train_history=model.fit_generator(datagen(train_path, N*K, x_mean), steps_per_epoch=1000,
-                                  epochs=100, validation_data=datagen(val_path, N*K, x_mean),
+train_history=model.fit_generator(datagen(train_path, N, K, x_mean), steps_per_epoch=1000,
+                                  epochs=100, validation_data=datagen(val_path, N, K, x_mean),
                                   validation_steps=2, verbose=1, callbacks=callbacks_list)
 
 # print('train_history: ', train_history.history)

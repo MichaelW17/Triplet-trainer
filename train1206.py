@@ -8,8 +8,8 @@ from os import listdir
 import imghdr
 import os, random
 import numpy as np
-from keras.layers import Dense,Dropout,Flatten,Conv2D, MaxPooling2D, Reshape, Activation
-from keras.models import Model
+from keras.layers import Dense, Lambda, Dropout,Flatten,Conv2D, MaxPooling2D, Reshape, Activation
+from keras.models import Model, load_model
 from keras.utils import np_utils
 from keras import optimizers, metrics
 
@@ -19,14 +19,14 @@ from keras.callbacks import ModelCheckpoint, TensorBoard
 import cv2
 from imgaug import augmenters as iaa
 import imgaug as ia
-
+import tensorflow as tf
 from triplet_losses import batch_all_triplet_loss, batch_hard_triplet_loss
-from triplet_metrics import triplet_accuracy, mean_norm
+from triplet_metrics import num_positives, distance_ratio
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 emb_size = 512
 class_num = 45  # SKU种类
-N = 12  # 每个batch里SKU的种类
+N = 4  # 每个batch里SKU的种类
 K = 4  # 每种SKU的图片数，一般固定取4
 batch_size = N * K
 x_mean = np.full((N*K, 456, 456, 3), (50.46, 52.25, 43.12), np.float32)
@@ -50,8 +50,6 @@ def datagen(dataset_path, N, K, x_mean):  # 函数式generator
             sku_path = dataset_path + sku_idx
 
             img_names = random.sample(os.listdir(sku_path), K)  # 每类SKU取K张图片
-            print(img_names)
-            print('OK')
             for img_name in img_names:
                 imgs[img_idx] = Image.open(sku_path + '/' + img_name)
                 img_idx += 1
@@ -70,7 +68,6 @@ def datagen(dataset_path, N, K, x_mean):  # 函数式generator
         imgs = imgs.astype(np.float32)-x_mean  # 转为ndarray
         # shuffle
         idxes = np.random.permutation(N*K)  # shuffle图的顺序
-        print('type(imgs): ', type(imgs))
         yield imgs[idxes], labels[idxes]
 
 # 测试datagen函数
@@ -105,26 +102,30 @@ def datagen(dataset_path, N, K, x_mean):  # 函数式generator
 
         # yield imgs_aug2.astype(np.float32)-x_mean, labels
 
-'''
 
-model = EfficientNetB5(weights='imagenet', include_top=True)  # 612层
-print('layer count: ', len(model.layers))
-print(model.summary())
+
+# model = EfficientNetB5(weights='imagenet', include_top=True)  # 612层
+model = load_model('C:/Users/Minghao/Desktop/dipper/weights-50classes-Friday_re3-26.h5')
+# print(model.summary())
+# print('layer count: ', len(model.layers))
 model.layers.pop()
 model.layers.pop()
 x = model.layers[-1].output
-out = Dense(emb_size, activation='linear')(x)
+out = Dense(emb_size, activation=None)(x)
+# 【02/07/2020: normlization is needed here!】
+out = Lambda(lambda x: tf.math.l2_normalize(x, axis=1), name='lambda_output')(out)
 model = Model(inputs=model.input, output=out)
+
 # plot_model(model, to_file='model.png',show_shapes=True)
-for i in range(0, len(model.layers)-2):
+for i in range(0, len(model.layers)-23):
     model.layers[i].trainable = False
-print('layer count: ', len(model.layers))
-print(model.summary())
+# print(model.summary())
+# print('layer count: ', len(model.layers))
 
 # sgd = optimizers.SGD(lr=0.0001, decay=0, momentum=0.9)
-model.compile(loss=batch_all_triplet_loss, optimizer='adam', metrics=[triplet_accuracy, mean_norm])
+model.compile(loss=batch_all_triplet_loss, optimizer='adam', metrics=[num_positives, distance_ratio])
 
-filepath = "weights-50classes-alien-{epoch:02d}.h5"
+filepath = "test0221-{epoch:02d}.h5"
 
 callbacks_list = []
 # 中途训练效果提升, 则将文件保存, 每提升一次, 保存一次
@@ -144,8 +145,8 @@ tensorboard_callback = TensorBoard(
         )
 callbacks_list.append(tensorboard_callback)
 
-train_history=model.fit_generator(datagen(train_path, N*K, x_mean), steps_per_epoch=1000,
-                                  epochs=100, validation_data=datagen(val_path, N*K, x_mean),
+train_history=model.fit_generator(datagen(train_path, N, K, x_mean), steps_per_epoch=1000,
+                                  epochs=100, validation_data=datagen(val_path, N, K, x_mean),
                                   validation_steps=2, verbose=1, callbacks=callbacks_list)
 
 # print('train_history: ', train_history.history)
@@ -153,4 +154,3 @@ train_history=model.fit_generator(datagen(train_path, N*K, x_mean), steps_per_ep
 # print(loss,accuracy,test)
 
 
-'''
